@@ -1,0 +1,39 @@
+The STRING1 program is a COBOL-based demonstration utility showcasing COBOL's string manipulation capabilities using the STRING and UNSTRING verbs.
+
+Key Features:
+
+Purpose:
+The program demonstrates how COBOL can concatenate multiple strings and split a single string into multiple components.
+
+Data Items:
+    FIRST-NAME (PIC X(10)) – Holds the first name of a person.
+    LAST-NAME (PIC X(10)) – Holds the last name of a person.
+    FULL-NAME (PIC X(25)) – Stores the combined full name after concatenation.
+    ADDRESS-LINE (PIC X(40)) – Contains a sample address string ("42 Wallaby Way, Sydney").
+    STREET (PIC X(25)) – Receives the street portion after UNSTRING.
+    CITY (PIC X(15)) – Receives the city portion after UNSTRING.
+
+Operations:
+
+STRING Operation:
+    Combines FIRST-NAME, a space, and LAST-NAME into FULL-NAME.
+    Demonstrates use of DELIMITED BY SPACE and DELIMITED BY SIZE clauses for flexible concatenation.
+
+UNSTRING Operation:
+    Splits ADDRESS-LINE into STREET and CITY, using a comma (,) as the delimiter.
+    Demonstrates COBOL’s capability to extract substrings based on delimiters.
+
+Procedure Flow:
+
+    0000-Main:
+        Performs the STRING operation to combine FIRST-NAME and LAST-NAME into FULL-NAME.
+        Displays the full name.
+        Performs the UNSTRING operation on ADDRESS-LINE to separate street and city.
+        Displays the extracted STREET and CITY.
+        Terminates program execution with STOP RUN.
+
+Output:
+    Displays the concatenated full name (e.g., "Alice Johnson").
+    Displays separated street and city:
+        Street: 42 Wallaby Way
+        City: Sydney

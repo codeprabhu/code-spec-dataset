@@ -1,0 +1,34 @@
+The ARITH1 program is a COBOL-based educational demonstration that showcases fundamental arithmetic operations in COBOL, including ADD, SUBTRACT, MULTIPLY, DIVIDE, and COMPUTE. It helps learners understand how basic mathematical expressions are performed and displayed in COBOL using numeric picture clauses.
+
+Key Features:
+
+Purpose:
+    Demonstrates the five core arithmetic verbs and expressions in COBOL and shows the structure of arithmetic statements with GIVING clauses and COMPUTE expressions.
+
+Data Details:
+    - NUM1 (PIC 9(3)): First numeric operand, initialized to 25.
+    - NUM2 (PIC 9(3)): Second numeric operand, initialized to 5.
+    - RESULT (PIC 9(4)V9(2)): Variable to store operation results, supports decimal precision.
+
+Operations Demonstrated:
+    1. ADD: Adds NUM1 and NUM2, stores result in RESULT.
+    2. SUBTRACT: Subtracts NUM2 from NUM1, stores result in RESULT.
+    3. MULTIPLY: Multiplies NUM1 by NUM2, stores result in RESULT.
+    4. DIVIDE: Divides NUM1 by NUM2, stores result in RESULT.
+    5. COMPUTE: Performs a complex expression (NUM1 ** 2 + NUM2 ** 2) / 2.
+
+Procedure Flow:
+    0000-Main:
+        - Sequentially performs all arithmetic operations.
+        - Displays results for each operation on the terminal.
+
+Output:
+    The program displays the result of each arithmetic operation with descriptive labels such as:
+        ADD Result: 30
+        SUBTRACT Result: 20
+        MULTIPLY Result: 125
+        DIVIDE Result: 5
+        COMPUTE Result: 325.00
+
+Educational Value:
+    This program provides a simple and clear demonstration of COBOL's arithmetic syntax, operator precedence, and formatted numeric display.

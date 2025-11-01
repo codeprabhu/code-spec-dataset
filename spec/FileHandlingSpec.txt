@@ -1,0 +1,52 @@
+The FILE-DEMO program is a COBOL-based demonstration designed to illustrate file handling operations such as reading from and writing to a sequential data file. This program provides a simple text-based menu system for managing student records, making it an educational example for beginners learning COBOL file I/O.
+
+Key Features:
+
+Purpose:
+The program allows users to create and read student records stored in a line-sequential data file ("students.dat"). It showcases how COBOL handles file I/O operations with structured records and menu-driven user input.
+
+File Details:
+
+    File Name: students.dat
+    Organization: Line Sequential
+    Record Structure (STUDENT-RECORD):
+        - STUDENT-ID (PIC 9(3)) – A three-digit numeric student ID.
+        - STUDENT-NAME (PIC A(20)) – Student name in alphabetic format.
+        - STUDENT-MARKS (PIC 999) – Numeric marks out of 100.
+
+Program Flow:
+
+    MAIN-PARA:
+        Displays a menu with three options:
+            1. Write to file
+            2. Read from file
+            3. Exit
+        Repeats the menu until the user chooses to exit.
+
+    WRITE-FILE:
+        Opens the file in OUTPUT mode and allows the user to enter multiple student records.
+        Each record includes ID, name, and marks.
+        Prompts the user to continue adding records until they choose 'N'.
+        Closes the file and confirms that records were successfully written.
+
+    READ-FILE:
+        Opens the file in INPUT mode and reads student records sequentially.
+        Displays each record’s ID, Name, and Marks on screen.
+        Uses an EOF flag to detect end-of-file and terminates reading when all records are displayed.
+        Closes the file after reading.
+
+Working Storage Details:
+
+    WS-OPTION – Stores the user’s menu choice.
+    WS-MORE – Controls continuation of record entry in WRITE-FILE.
+    EOF – Used as an end-of-file indicator in READ-FILE.
+
+Output:
+
+    Interactive prompts allow the user to input and display student data.
+    Displays a success message after writing and a formatted list of records when reading.
+
+Educational Focus:
+
+    Demonstrates COBOL’s sequential file organization and the use of OPEN, READ, WRITE, and CLOSE statements.
+    Teaches basic control flow, data entry handling, and structured looping through PERFORM UNTIL constructs.

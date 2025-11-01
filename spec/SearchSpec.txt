@@ -1,0 +1,35 @@
+SEARCH1 Program Specification
+----------------------------------------
+Purpose:
+The SEARCH1 program demonstrates the use of COBOL's SEARCH verb for performing
+a linear search on a small in-memory table. It looks up an employee name based
+on a provided Employee ID.
+
+Table Details:
+- Table Name: EMPLOYEE-TABLE
+- Structure:
+    Fields:
+        EMP-ID   (PIC 9(3))   – Numeric Employee ID.
+        EMP-NAME (PIC X(15))  – Employee’s full name.
+- Occurrence: 5 entries.
+- Indexed By: IDX.
+
+Logic Overview:
+1. The table EMPLOYEE-TABLE is initialized in the WORKING-STORAGE section with
+   5 employee records containing predefined IDs and names.
+2. A target Employee ID (WS-TARGET-ID) is set to 103.
+3. The SEARCH verb iterates through the EMPLOYEE-TABLE:
+   - If a matching EMP-ID is found, the corresponding EMP-NAME is displayed,
+     and WS-FOUND-FLAG is set to 'Y'.
+   - If no match is found, the program displays "Employee not found.".
+
+Procedure Flow:
+- 0000-Init:
+    Initializes the employee table with static entries (EMP-ID and EMP-NAME).
+- 1000-Search:
+    Performs a sequential search on the table for WS-TARGET-ID using the SEARCH verb.
+    Displays the found employee’s name or an appropriate message if not found.
+
+Output:
+- Displays the name of the employee if the ID matches.
+- If no match is found, outputs: "Employee not found.".

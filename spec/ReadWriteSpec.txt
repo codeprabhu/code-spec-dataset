@@ -1,0 +1,47 @@
+The READWRITE1 program is a COBOL-based educational demo designed to demonstrate basic file handling operations, focusing on sequential reading and writing. It showcases COBOL’s ability to read text line-by-line, transform data, and write results to a new file.
+
+Key features:
+
+Purpose:
+The program illustrates how COBOL performs file I/O operations using the READ, WRITE, and CLOSE statements. It reads text lines from an input file, converts them to uppercase using the intrinsic function UPPER-CASE, and writes the transformed data to an output file.
+
+File Details:
+
+    Input File: names-in.txt – Contains one name per line (up to 30 characters).
+    Output File: names-out.txt – Stores the uppercase versions of the names read from the input file.
+
+Record Structure:
+
+    IN-RECORD  (PIC X(30)) – Input name record.
+    OUT-RECORD (PIC X(30)) – Output name record.
+
+Processing Mechanism:
+
+    1. Opening Files:
+       Opens the input file for reading and the output file for writing.
+
+    2. Reading and Writing Loop:
+       - Reads a record from INFILE.
+       - If not at end-of-file, converts it to uppercase using FUNCTION UPPER-CASE.
+       - Writes the converted record to the output file.
+       - Repeats until all records are processed.
+
+    3. Closing Files:
+       After reaching the end of the input file, both files are closed properly.
+
+Procedure Flow:
+
+    0000-Main:
+        - Opens the input and output files.
+        - Performs a loop until WS-EOF-FLAG = 'Y':
+            - Reads each line from the input file.
+            - Converts it to uppercase.
+            - Writes the result to the output file.
+        - Closes both files.
+        - Displays a completion message: "Processing complete."
+
+Output:
+
+    Each line from names-in.txt is written to names-out.txt in uppercase.
+    Displays a console message upon completion:
+        "Processing complete."
