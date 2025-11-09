@@ -1,0 +1,170 @@
+COBOL Packet Management System — Specification
+==============================================
+
+Overview
+--------
+The Packet Management System implements the core networking layer responsible for
+handling all client-server packet registration, lookup, dispatching, and sending.
+
+Each packet represents a structured message between the client and server,
+identified by a numeric ID and a human-readable reference (e.g. "play/clientbound/minecraft:chat").
+
+Components
+----------
+Program                     | Responsibility
+----------------------------|-----------------------------------------------
+Packets-Register            | Registers a packet name and assigns it an ID.
+Packets-Count               | Returns the total number of registered packets.
+Packets-GetId               | Looks up a packet's numeric ID by reference name.
+Packets-GetReference        | Retrieves a packet name by state, direction, and ID.
+InitializePacketHandlers    | Initializes the packet handler lookup table.
+RegisterPacketHandler       | Registers a handler program for an incoming packet.
+HandlePacket                | Executes the correct handler for received packets.
+SendPacket                  | Sends encoded packets to clients via sockets.
+
+Shared Data Structures
+----------------------
+- DD-PACKET-IDS: Defines arrays for packet names, IDs, and reference strings.
+- DD-CLIENT-STATES: Defines enumerations for client connection states.
+- DD-PACKET-DIRECTIONS: Defines constants for serverbound and clientbound packet directions.
+- DD-PACKET-HANDLERS: Stores handler function pointers per state/packet combination.
+- DD-CLIENTS: Holds active client handles and socket error states.
+
+Functional Specification
+------------------------
+
+1. Packets-Register
+-------------------
+Purpose: Register a new packet reference, associating it with a numeric ID.
+
+Inputs:
+- LK-STATE: Client state (handshake, status, login, configuration, play).
+- LK-DIRECTION: Packet direction (serverbound or clientbound).
+- LK-PACKET-NAME: Human-readable string name (e.g. "minecraft:chat").
+- LK-PACKET-ID: Numeric ID assigned to the packet.
+
+Outputs:
+- Updates PACKET-ID-REFERENCE and PACKET-ID-NUMBER arrays.
+- Stores packet reference string ("state/direction/name").
+
+Process Flow:
+1. Build the reference prefix based on client state.
+2. Append "/" and the direction ("serverbound"/"clientbound").
+3. Append "/" and the packet name.
+4. Increment PACKET-ID-COUNT and store reference + ID mapping.
+
+Error Handling:
+- Invalid state or direction triggers ASSERT-FAILED macro.
+
+
+2. Packets-Count
+----------------
+Purpose: Return total number of registered packets.
+
+Inputs: None
+Outputs: LK-COUNT (current PACKET-ID-COUNT value)
+
+
+3. Packets-GetId
+----------------
+Purpose: Retrieve packet numeric ID from reference string.
+
+Inputs:
+- PACKET-REFERENCE (string)
+
+Outputs:
+- PACKET-ID (numeric, -1 if not found)
+
+Process Flow:
+- Iterates through PACKET-ID-REFERENCE list.
+- Compares each string to PACKET-REFERENCE.
+- Returns corresponding PACKET-ID-NUMBER on match.
+
+
+4. Packets-GetReference
+-----------------------
+Purpose: Reverse lookup of packet name using state, direction, and ID.
+
+Inputs:
+- CLIENT-STATE
+- PACKET-DIRECTION
+- PACKET-ID
+
+Outputs:
+- PACKET-NAME (human-readable)
+
+Error Handling:
+- Displays descriptive error if invalid arguments given.
+
+
+5. InitializePacketHandlers
+---------------------------
+Purpose: Initialize handler lookup table to empty state.
+
+Inputs: None
+Outputs:
+- Zeroes all PACKET-HANDLER entries.
+
+
+6. RegisterPacketHandler
+------------------------
+Purpose: Associate a packet with its processing program.
+
+Inputs:
+- LK-CLIENT-STATE
+- LK-PACKET-NAME (e.g. "minecraft:chat_message")
+- LK-HANDLER-NAME (COBOL program name)
+
+Outputs:
+- Updates PACKET-HANDLER(state, id) with program pointer.
+
+Process Flow:
+1. Builds reference "state/serverbound/name".
+2. Retrieves packet ID using Packets-GetId.
+3. Uses SET ... TO ENTRY to obtain handler pointer.
+4. Stores handler pointer in PACKET-HANDLER table.
+
+Error Handling:
+- Invalid state, missing packet, or null handler triggers ASSERT macros.
+
+
+7. HandlePacket
+---------------
+Purpose: Execute correct handler for an incoming client packet.
+
+Inputs:
+- LK-CLIENT: Client index.
+- LK-CLIENT-STATE: Client state.
+- LK-PACKET-ID: Packet numeric ID.
+- LK-PAYLOAD: Raw payload data.
+- LK-PAYLOAD-LENGTH: Payload length.
+
+Process Flow:
+1. Validate client state and packet ID.
+2. Fetch handler pointer from PACKET-HANDLER(state, id).
+3. If present, call the handler program with client data.
+4. Check payload consumption consistency and log if mismatched.
+
+Error Handling:
+- Invalid state disconnects the client via Server-DisconnectClient.
+
+
+8. SendPacket
+-------------
+Purpose: Serialize and send a packet to the client.
+
+Inputs:
+- LK-CLIENT: Target client index.
+- LK-PACKET-ID: Packet numeric ID.
+- LK-PAYLOAD: Data buffer.
+- LK-PAYLOAD-LENGTH: Length of payload data.
+
+Process Flow:
+1. Skip if client is already in error state.
+2. Compute total length = VarInt(packet ID) + payload length.
+3. Encode and send header (length + packet ID).
+4. Send payload bytes.
+5. Update error state if transmission fails.
+
+Error Handling:
+- Sets CLIENT-ERRNO-SEND(LK-CLIENT) to non-zero on error.

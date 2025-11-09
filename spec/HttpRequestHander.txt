@@ -1,0 +1,135 @@
+COBOL HTTP Handler Module — Specification
+=========================================
+
+Overview
+--------
+The HTTP-HANDLER module implements a basic HTTP request parser and response generator.
+It processes client HTTP requests, sanitizes paths, reads files from disk, and generates
+appropriate HTTP responses with correct headers and body content.
+
+This program is designed for integration into a simple COBOL-based web server system.
+
+Components
+----------
+Program               | Responsibility
+----------------------|-------------------------------------------------------------
+HTTP-HANDLER          | Parse HTTP requests and generate appropriate HTTP responses.
+URL-DECODE            | Convert URL-encoded characters (e.g., %20 → space).
+PATH-UTILS            | Sanitize and validate file system paths.
+FILE-OPS              | Read requested file into buffer.
+MIME-TYPES            | Determine MIME type based on file extension.
+
+Data Structures
+---------------
+COPY "http-structs.cpy"
+    - Defines HTTP request/response fields (REQUEST-METHOD, REQUEST-PATH, MIME-TYPE).
+
+COPY "file-structs.cpy"
+    - Defines file I/O buffers (FILE-BUFFER, FILE-SIZE).
+
+Working Storage
+---------------
+WS-INDEX              : String index for parsing.
+WS-SPACE-POS          : Tracks position of first space in HTTP request.
+WS-PATH-LEN           : Length of extracted URL path.
+WS-RETURN-CODE        : Return code from subprograms (0=OK, nonzero=error).
+WS-SIZE-STR           : String representation of file size for Content-Length.
+WS-CRLF               : HTTP line break (carriage return + line feed).
+WS-DECODED-PATH       : Path after URL decoding.
+
+Linkage Section
+---------------
+LS-REQUEST-BUF        : Raw HTTP request from client (max 8KB).
+LS-RESPONSE-BUF       : HTTP response output buffer (max 64KB).
+LS-RESPONSE-LEN       : Actual length of response generated.
+
+Functional Specification
+-------------------------
+
+1. Request Parsing
+------------------
+Purpose:
+    Extract the HTTP method (GET, POST, etc.) and the requested file path.
+
+Process Flow:
+1. Initialize request fields and buffers.
+2. Find first space in request to identify HTTP method.
+3. Extract path between first and second space.
+4. Decode path via URL-DECODE.
+5. Sanitize using PATH-UTILS to prevent directory traversal.
+
+Error Handling:
+- Invalid paths trigger a 403 Forbidden response.
+
+2. File Retrieval
+-----------------
+Purpose:
+    Load requested file contents into memory buffer for response generation.
+
+Process Flow:
+1. Call FILE-OPS using the sanitized path.
+2. FILE-OPS returns file data and size in FILE-BUFFER and FILE-SIZE.
+
+Error Handling:
+- Return 404 if file not found.
+- Return 413 if file size exceeds internal buffer limit.
+
+3. MIME Type Resolution
+-----------------------
+Purpose:
+    Determine Content-Type header value.
+
+Process Flow:
+1. Call MIME-TYPES with file path.
+2. MIME-TYPES returns appropriate MIME string (e.g., "text/html").
+
+4. Response Construction
+------------------------
+Purpose:
+    Construct full HTTP response headers and body in LS-RESPONSE-BUF.
+
+Responses Implemented:
+----------------------
+| Status | Description           | Trigger Condition |
+|---------|-----------------------|------------------|
+| 200 OK  | Success               | File successfully read |
+| 403     | Forbidden             | Invalid/suspicious path |
+| 404     | Not Found             | File not found |
+| 413     | Payload Too Large     | File too big |
+
+Response Assembly (200 OK):
+1. Convert FILE-SIZE to string for Content-Length.
+2. Build headers using STRING statements:
+   - HTTP/1.1 200 OK
+   - Content-Type
+   - Content-Length
+3. Append CRLF CRLF to separate headers from body.
+4. Copy FILE-BUFFER contents into LS-RESPONSE-BUF after headers.
+5. Compute total response length via INSPECT.
+
+Static Error Responses (403, 404, 413):
+---------------------------------------
+These use pre-built HTML bodies like:
+<html><body><h1>403 Forbidden</h1></body></html>
+
+5. Error Handling Summary
+-------------------------
+Error Code | Meaning                     | Action Taken
+-----------|-----------------------------|--------------------------------
+0          | Success                     | Continue to response build
+1          | File not found              | Build 404 Not Found response
+2          | File too large              | Build 413 Payload Too Large response
+3          | Path validation failure     | Build 403 Forbidden response
+
+6. Output
+---------
+- LS-RESPONSE-BUF: Complete HTTP response string
+- LS-RESPONSE-LEN: Byte length of response
+
+Example Response (200 OK)
+-------------------------
+HTTP/1.1 200 OK
+Content-Type: text/html
+Content-Length: 125
+
+<html><body><h1>Welcome to COBOL Web Server</h1></body></html>

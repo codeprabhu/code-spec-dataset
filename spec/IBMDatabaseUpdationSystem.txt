@@ -1,0 +1,144 @@
+COBOL Program Specification — LGUCDB01
+======================================
+
+Program Name
+-------------
+LGUCDB01 — Update Customer Details
+
+Purpose
+--------
+This program updates customer information in a DB2 database. It runs inside
+the IBM CICS environment and is triggered by another program or user action.
+It validates input, performs an SQL UPDATE, handles errors, and logs problems
+if they occur.
+
+Overview
+--------
+1. Receive customer information from another program (COMMAREA).
+2. Convert and prepare the data for DB2 SQL operations.
+3. Update the CUSTOMER table in the database with the new details.
+4. If the update fails, write an error message to the system log.
+5. Call another program (LGUCVS01) after the update is complete.
+6. Return control to the CICS system.
+
+Inputs
+-------
+- COMMAREA (DFHCOMMAREA): Contains customer details from the caller.
+- Customer data fields include:
+  - Customer number
+  - First name
+  - Last name
+  - Date of birth
+  - Address and phone numbers
+  - Email address
+
+Outputs
+--------
+- Updated customer record in DB2 database.
+- Return codes in COMMAREA:
+  - '00' = Success
+  - '01' = Customer not found
+  - '90' = Database or system error
+
+Environment
+------------
+- CICS Transaction Processing System
+- DB2 Database
+- COBOL Language with Embedded SQL (EXEC SQL statements)
+- Error logging via CICS Transient Data Queue (TDQ)
+
+Key Variables
+--------------
+WS-HEADER          : Stores runtime info (transaction ID, terminal ID, etc.)
+DB2-IN-INTEGERS    : Holds integer-type DB2 input variables.
+ERROR-MSG          : Structure for formatted error messages.
+CA-ERROR-MSG       : Structure for logging COMMAREA data in errors.
+WS-DATE/TIME       : Stores formatted system date and time for logs.
+
+Main Processing Steps
+----------------------
+
+1. **Initialization**
+   - Clear all working variables.
+   - Capture transaction identifiers from the CICS environment.
+   - Set initial return code to '00'.
+
+2. **Validate Input**
+   - Check if COMMAREA (input data) exists.
+   - If not, log "NO COMMAREA RECEIVED" and terminate abnormally.
+
+3. **Prepare Data**
+   - Convert customer number from character to DB2 integer format.
+   - Copy customer number into the error message area for tracing.
+
+4. **Update Customer Record**
+   - Execute SQL UPDATE on the CUSTOMER table.
+   - Set new values for fields like FIRSTNAME, LASTNAME, PHONE, EMAIL, etc.
+   - Use CUSTOMERNUMBER to identify the correct record.
+
+5. **Error Handling**
+   - If SQLCODE = 0 → Success
+   - If SQLCODE = 100 → No record found → Set return code '01'
+   - Otherwise → General failure → Set return code '90' and log error.
+
+6. **Link to Next Program**
+   - On success, call LGUCVS01 via EXEC CICS LINK to continue workflow.
+
+7. **Write Error Message (if needed)**
+   - Capture SQLCODE, time, and date.
+   - Format a readable message string.
+   - Send message to CICS system log via program LGSTSQ.
+   - Also write the COMMAREA content if available (first 90 bytes).
+
+Error Handling Summary
+-----------------------
+Error Code | Description                 | Action
+-----------|-----------------------------|-----------------------------
+00         | Success                     | Proceed to next step
+01         | Customer not found          | Return '01' to caller
+90         | Database/system failure     | Log error and return '90'
+LGCA       | No COMMAREA received        | Program abends immediately
+
+External Programs
+------------------
+- LGUCVS01 : Called after successful update, possibly to verify or continue the process.
+- LGSTSQ   : Handles writing of error messages to a transient data queue.
+
+Database Tables Accessed
+-------------------------
+CUSTOMER — Updated with new customer details.
+
+SQL Statements
+---------------
+UPDATE CUSTOMER
+   SET FIRSTNAME    = :CA-FIRST-NAME,
+       LASTNAME     = :CA-LAST-NAME,
+       DATEOFBIRTH  = :CA-DOB,
+       HOUSENAME    = :CA-HOUSE-NAME,
+       HOUSENUMBER  = :CA-HOUSE-NUM,
+       POSTCODE     = :CA-POSTCODE,
+       PHONEMOBILE  = :CA-PHONE-MOBILE,
+       PHONEHOME    = :CA-PHONE-HOME,
+       EMAILADDRESS = :CA-EMAIL-ADDRESS
+ WHERE CUSTOMERNUMBER = :DB2-CUSTOMERNUM-INT;
+
+Return Codes
+-------------
+00 = Update successful
+01 = Customer not found
+90 = Database/system error
+
+Example Flow
+-------------
+1. Input received with customer number 12345.
+2. Program converts and validates input.
+3. Executes SQL UPDATE on CUSTOMER where CUSTOMERNUMBER = 12345.
+4. If successful → '00' returned.
+5. If no record found → '01' returned.
+6. If DB2 or CICS issue → '90' returned and error logged.
+
+Summary
+--------
+This program ensures customer data in the DB2 database stays accurate.
+It handles all typical update scenarios, detects errors safely,
+and communicates clearly with other CICS modules through COMMAREA data.

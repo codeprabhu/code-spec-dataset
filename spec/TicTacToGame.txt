@@ -1,0 +1,132 @@
+COBOL Program Specification — TIC-TAC-TOBOL
+============================================
+
+Program Name
+-------------
+TIC-TAC-TOBOL — A terminal-based Tic-Tac-Toe game implemented in COBOL.
+
+Purpose
+--------
+This program allows a human player to play Tic-Tac-Toe against a computer opponent.
+It demonstrates screen I/O, condition names, file reading, and simple AI decision-making.
+
+Overview
+--------
+1. Initializes a 3x3 game board using a COBOL table structure.
+2. Alternates turns between the human ('X') and computer ('O') player.
+3. Reads win-condition patterns from an external file ("SMACK.DAT").
+4. Detects wins, losses, and stalemates.
+5. Displays the board and messages using the SCREEN SECTION.
+6. Tracks the number of moves, games, and wins.
+
+Inputs
+-------
+1. **SMACK.DAT** — External text file containing winning combinations for Tic-Tac-Toe.
+   Each line is a 9-character mask where '1' indicates a cell in a win pattern.
+
+2. **Player input** — Human player types moves in the format `<row><column>` (e.g., `A2`).
+
+Outputs
+--------
+- Game board rendered in the console via SCREEN SECTION.
+- Messages displayed such as "Winner!", "Stalemate!", or "Invalid move...".
+- Statistics showing total games and wins.
+- Optional replay prompt ("One more (y/n)?").
+
+Environment
+------------
+- Language: COBOL (ANSI/IBM compatible)
+- Uses SCREEN SECTION for console display.
+- Reads from and writes to external file SMACK.DAT.
+- Can be compiled using GnuCOBOL or mainframe COBOL compilers.
+
+Key Data Structures
+--------------------
+- **WS-GAME-GRID**: 3x3 table holding current board state ('X', 'O', or space).
+- **WS-FLAT-GAME-GRID**: 9-character flattened version of the board for win checking.
+- **WS-WINS**, **WS-GAMES**, **WS-MOVES**: Counters for statistics.
+- **WS-MESSAGE**, **WS-INSTRUCTION**: Display strings for messages and prompts.
+- **WS-PLAYER**: Current player marker ('X' or 'O').
+
+Program Flow
+-------------
+
+1. **Initialization**
+   - Sets the human player to 'X'.
+   - Clears the board, moves, and state variables.
+   - Displays the starting message.
+
+2. **Main Game Loop**
+   - Runs until the player chooses not to continue.
+   - Alternates between player and computer turns.
+   - Displays the board and prompts for moves.
+
+3. **Move Handling**
+   - If the human player is active:
+     - Prompts for input (like 'A2').
+     - Parses and validates the move.
+     - Updates the corresponding cell.
+   - If the computer is active:
+     - Randomly selects an available square.
+     - Marks it with 'O'.
+
+4. **Win Detection**
+   - Converts the board to binary form ('1' for player marks, '0' for others).
+   - Reads each line from SMACK.DAT and compares with the binary grid.
+   - If three matching '1's are found → sets WIN or LOSE condition.
+
+5. **Result Handling**
+   - Updates WS-STATE to "WIN", "LOSE", or "STALE".
+   - Displays appropriate message and color scheme.
+   - Increments games and win counters.
+
+6. **Replay Prompt**
+   - Asks "One more (y/n)?" at end of each game.
+   - If 'y', restarts; if 'n', program terminates.
+
+File Usage
+-----------
+File: SMACK.DAT  
+Organization: Line Sequential  
+Each record: 9 characters, representing a win mask pattern.
+
+Example masks:
+- "111000000" → top row win
+- "100100100" → left column win
+- "100010001" → diagonal win
+
+Conditions and Flags
+---------------------
+- `HUMAN-PLAYER` / `COMPUTER-PLAYER`: Identify whose turn it is.
+- `GAME-OVER`: True if WS-STATE = "WIN", "LOSE", or "STALE".
+- `MOVE-COMPLETE`: True after a valid move has been made.
+- `WIN-DETECTED`: True when WS-MASK-DETECTED >= 3.
+- `EOF`: End of file reached while reading SMACK.DAT.
+- `SWAP-PLAYERS`: Indicates turn switching.
+
+Error Handling
+---------------
+- Invalid inputs (e.g., wrong format or filled square) set WS-MOVE-OUTCOME = "FAIL".
+- EOF during SMACK.DAT read ends the win-check loop gracefully.
+- No win and full board results in a stalemate.
+
+Screen Layout
+--------------
+- 3x3 grid with labeled rows (A–C) and columns (1–3).
+- Message area for gameplay feedback.
+- Stats section showing games and moves.
+- Uses background and foreground colors for visual cues.
+
+Termination
+------------
+- Stops after player chooses 'N' or 'n' when prompted for replay.
+- Returns control to the system with STOP RUN.
+
+Summary
+--------
+TIC-TAC-TOBOL is a COBOL implementation of Tic-Tac-Toe featuring:
+- Turn-based player logic
+- File-driven win condition detection
+- Text-based UI via SCREEN SECTION
+- Basic computer AI with random move selection
+- Tracking of gameplay statistics

@@ -1,0 +1,108 @@
+COBOL Whitelist Management System — Specification
+=================================================
+
+Overview
+--------
+The Whitelist Management System is a COBOL module that manages player access permissions for a server.
+It provides a way to read, write, verify, add, and remove entries from a whitelist.json file.
+
+Each player entry consists of:
+- a UUID (unique identifier, 16 bytes)
+- a player name (up to 16 characters)
+
+The system ensures only whitelisted players are allowed to connect to the server.
+
+Components
+----------
+Program                  | Responsibility
+--------------------------|----------------------------------------------
+Whitelist-Read            | Loads and parses the whitelist.json file.
+Whitelist-Write           | Serializes and writes whitelist.json.
+Whitelist-Check           | Checks if a player name exists.
+Whitelist-Add             | Adds a new entry if not already present.
+Whitelist-Remove          | Removes a player from the whitelist by name.
+
+Shared Data Structure (DD-WHITELIST)
+------------------------------------
+01  WHITELIST-LENGTH          BINARY-LONG UNSIGNED.
+01  WHITELIST-UUID            PIC X(16) OCCURS n TIMES.
+01  WHITELIST-NAME            PIC X(16) OCCURS n TIMES.
+
+Functional Specification
+-------------------------
+
+1. Whitelist-Read
+-----------------
+Purpose: Read and parse whitelist.json into internal COBOL arrays.
+
+Inputs:
+- whitelist.json file
+- LK-FAILURE (output flag)
+
+Outputs:
+- Populates WHITELIST-UUID, WHITELIST-NAME, WHITELIST-LENGTH
+- LK-FAILURE = 1 on failure, 0 on success
+
+Process Flow:
+1. Initialize WHITELIST-LENGTH to 0.
+2. Read file into buffer (Files-ReadAll).
+3. If not found, call Whitelist-Write to create an empty one.
+4. Parse JSON objects using JsonParse-* routines.
+5. Store valid entries into memory arrays.
+6. On errors, set LK-FAILURE = 1.
+
+2. Whitelist-Write
+------------------
+Purpose: Write in-memory whitelist to whitelist.json.
+
+Inputs:
+- WHITELIST arrays from DD-WHITELIST
+
+Outputs:
+- whitelist.json file updated
+- LK-FAILURE = 0 success, 1 failure
+
+Process Flow:
+1. Encode JSON array of objects.
+2. Convert UUID to string via UUID-ToString.
+3. Write using Files-WriteAll.
+
+3. Whitelist-Check
+------------------
+Purpose: Verify if a player exists by name.
+
+Inputs: LK-NAME (player name)
+
+Outputs: LK-RESULT = 1 if found, 0 if not.
+
+Process Flow:
+1. Loop through WHITELIST-NAME array.
+2. Compare each entry to LK-NAME.
+3. Set LK-RESULT accordingly.
+
+4. Whitelist-Add
+----------------
+Purpose: Add a new entry if it doesn’t exist.
+
+Inputs: LK-UUID, LK-NAME
+Outputs: LK-ALREADY-EXISTS, LK-IO-FAILURE
+
+Process Flow:
+1. Call Whitelist-Check.
+2. If exists → set LK-ALREADY-EXISTS = 1.
+3. Else append entry and call Whitelist-Write.
+4. Return LK-IO-FAILURE = 1 if write fails.
+
+5. Whitelist-Remove
+-------------------
+Purpose: Remove an existing entry by name.
+
+Inputs: LK-NAME
+Outputs: LK-NOT-FOUND, LK-IO-FAILURE
+
+Process Flow:
+1. Find matching WHITELIST-NAME.
+2. Replace with last entry to fill gap.
+3. Decrease WHITELIST-LENGTH.
+4. Write updated list via Whitelist-Write.
+5. Set LK-NOT-FOUND = 1 if no match found.
